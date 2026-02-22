@@ -1,0 +1,16 @@
+torch
+transformers
+datasets
+rouge_score
+deep-translator
+streamlit
+pandas
+numpy
+scikit-learn
+accelerate
+nltk
+sentencepiece
+sacremoses
+langdetect
+py7zr
+requests

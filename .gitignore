@@ -1,0 +1,9 @@
+artifacts/
+data_dump/
+tokenizer_large/
+*.pth
+__pycache__/
+*.pyc
+.env
+.ipynb_checkpoints/
+error_log.txt
