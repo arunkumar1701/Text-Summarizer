@@ -1,6 +1,6 @@
 import streamlit as st
 import torch
-from transformers import PegasusForConditionalGeneration, PegasusTokenizer
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from deep_translator import GoogleTranslator
 from langdetect import detect
 import os
@@ -109,24 +109,24 @@ li[role="option"] {
 """, unsafe_allow_html=True)
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-PEGASUS_PATH = os.path.join("artifacts", "models", "pegasus")
 
-@st.cache_resource(show_spinner="Loading Pegasus Model (One-time Setup)...")
-def load_pegasus_model():
-    path = PEGASUS_PATH if os.path.exists(PEGASUS_PATH) else "google/pegasus-cnn_dailymail"
-    tokenizer = PegasusTokenizer.from_pretrained(path)
-    model = PegasusForConditionalGeneration.from_pretrained(path).to(DEVICE)
+@st.cache_resource(show_spinner="Loading Lightning-fast Summarization Model (One-time Setup)...")
+def load_summarization_model():
+    # Using a smaller model (Falconsai/text_summarization) which is highly optimized 
+    # and takes only ~240MB RAM compared to ~2.5GB for Pegasus, avoiding Streamlit Cloud memory limits.
+    model_name = "Falconsai/text_summarization"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(DEVICE)
     return tokenizer, model
 
 def summarize(text, tokenizer, model):
-    inputs = tokenizer(text, max_length=1024, truncation=True, return_tensors="pt").to(DEVICE)
-    # Using specific generation parameters suited for pegasus
+    inputs = tokenizer("summarize: " + text, max_length=512, truncation=True, return_tensors="pt").to(DEVICE)
     summary_ids = model.generate(
         inputs["input_ids"], 
         max_length=150, 
         min_length=30, 
-        num_beams=4, 
         length_penalty=2.0, 
+        num_beams=4,
         early_stopping=True
     )
     return tokenizer.decode(summary_ids[0], skip_special_tokens=True)
@@ -160,10 +160,10 @@ def detect_and_translate_to_english(text):
     return text, 'en'
 
 # Load Model
-tokenizer, model = load_pegasus_model()
+tokenizer, model = load_summarization_model()
 
 # Header
-st.markdown('<div class="glass-header"><h1 style="text-align: center; margin:0; padding-bottom:5px; font-weight:800; letter-spacing: 1px;">✨ Nexus AI: Text Summarization</h1><p style="text-align: center; color:#dcdcdc; margin:0; font-size: 1.1em;">Powered by State-of-the-Art Pegasus Model & Glassmorphism UI</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="glass-header"><h1 style="text-align: center; margin:0; padding-bottom:5px; font-weight:800; letter-spacing: 1px;">✨ Nexus AI: Text Summarization</h1><p style="text-align: center; color:#dcdcdc; margin:0; font-size: 1.1em;">Powered by Lightning-Fast Summarization AI & Glassmorphism UI</p></div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns([1.1, 1], gap="large")
 
